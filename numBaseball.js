@@ -14,16 +14,20 @@ let tryCount = 0;
 function startMenu() {
     rl.question("게임을 새로 시작하려면 1, 기록을 보려면 2, 종료하려면 9를 입력하세요. \n", (line) => {
         if(line == 1){
+            // 1번 누르면 새 게임 시작
             gameStart();
         }
         else if(line == 2){
+            // 2번 누르면 게임 기록 보기
             showRecords();
         }
         else if(line == 9){
+            // 9번 누르면 프로그램 종료
             console.log("애플리케이션이 종료되었습니다.");
             rl.close();
         }
         else{
+            // 다른 값 누를 시 잘못된 입력입니다. 보여준 후 메뉴 다시 실행
             console.log("잘못된 입력입니다.");
             startMenu();
         }
@@ -32,7 +36,7 @@ function startMenu() {
 // startMenu(); : 시작 / 종료 / 다른 숫자 입력 됐을 시 출력시키는 함수
 
 function getRandomNumbers(){
-    const correctNumberSet = new Set();
+    const correctNumberSet = new Set(); // 중복제거를 위해 사용
     while(correctNumberSet.size < 3){
         const setNum = Math.floor(Math.random() * 9) + 1;
         // math.random() : 0이상 1미만의 실수 난수 생성
@@ -52,21 +56,22 @@ function getRandomNumbers(){
 // 후에 배열로 변환 : 위치 정보를 위해서 변환함
 
 function userInput(callback){ 
-    rl.question("숫자를 입력해주세요 : ", (answer)=>{
-        const userNumber = [];
-        if(answer.length !== 3){
+    rl.question("숫자를 입력해주세요 : ", (answer)=>{ // callback 통해 입력값 전달
+        const userNumber = []; // 사용자 입력값 저장하는 배열
+        if(answer.length !== 3){ // 입력값의 길이가 3이 아닐 경우
             console.log("3자리 숫자를 입력해주세요.");
-            return userInput(callback);
+            return userInput(callback); // 다시 입력 요청
         } 
         for(let i=0; i<3; i++){
             const num = parseInt(answer[i]);                    
             if(num < 1 || num > 9 || userNumber.includes(num)){
+                // 1~9 범위가 아니거나 중복된 숫자가 입력됐을 시
                 console.log("1부터 9까지의 서로 다른 숫자를 입력해주세요.");
                 return userInput(callback);
             }               
-            userNumber.push(num);
+            userNumber.push(num); // 배열에 사용자 입력값 추가
         }       
-        callback(userNumber);
+        callback(userNumber); // 추가된 배열을 콜백 함수로 전달
     }); 
 }
 
@@ -110,25 +115,26 @@ function gameStart(){
     const correctNumber = getRandomNumbers();
     startTime = new Date();
     tryCount = 0; // 새 게임 시작 시 시도횟수 리셋
-    let roundHistory = [];
+    let roundHistory = []; // 현재 게임의 진행 기록 배열
     
 
     function playRound() {
         userInput(function(userNumber){
             tryCount++;
-            roundHistory.push(`숫자를 입력해주세요 : ${userNumber.join("")}`);
-            const isGameOver = strikeOrBall(userNumber, correctNumber, roundHistory);
+            roundHistory.push(`숫자를 입력해주세요 : ${userNumber.join("")}`); // 배열 각 요소 구분 
+            const isGameOver = strikeOrBall(userNumber, correctNumber, roundHistory); 
+            // isGameOver 변수에 strikeOrBall에서의 리턴값 true / false를 저장
             if(!isGameOver){
-                playRound();
-            } else {
+                playRound(); // false면 라운드 진행 
+            } else { // true(끝났으면)면 게임 기록 저장
                 endTime = new Date();
                 gameNum++;
                 gameRecords.push({
-                    id : gameNum,
-                    start : formatDate(startTime),
-                    end : formatDate(endTime),
-                    count : tryCount,
-                    history : roundHistory
+                    id : gameNum, // 게임 번호
+                    start : formatDate(startTime), // 게임 시작 시간
+                    end : formatDate(endTime), // 게임 종료 시간
+                    count : tryCount, // 시도 횟수
+                    history : roundHistory // 진행 내역
                 })
                 startMenu();
             }
@@ -138,33 +144,38 @@ function gameStart(){
 }
 
 function showRecords(){
-    if(gameRecords.length === 0){
+    if(gameRecords.length === 0){ // 저장된 기록이 없을 시
         console.log("저장된 게임 기록이 없습니다.");
         console.log("--------------------------");
         startMenu();  // 다시 게임 시작해야함
     } else{
         console.log("\n게임 기록");
+        // 배열의 게임 기록 객체를 순회하며 콜백 실행 (record가 객체)
         gameRecords.forEach((record) => {
             console.log(
                 `[${record.id}] / 시작시간 : ${record.start} / 종료시간 : ${record.end} / 횟수 : ${record.count}`
             );
         });
-        selectRecords();
+        selectRecords(); // 기록 있으면 
     }
 }
         
           
+// 기록 목록을 선택해서 게임 진행과정 보여주는 함수
 
 function selectRecords(){
     rl.question("확인할 게임 번호를 입력하세요 (종료하려면 0을 입력) : ", (recordNum) => {
             const num = parseInt(recordNum);
             if(num === 0){
+                // 0번 누르면 메뉴로 복귀
                 startMenu();
             } else{
-                const recordId = gameRecords.find(index => index.id === num);
-                if(!recordId){
+                // 배열을 순회하여 조건을 만족하는 요소를 찾음
+                // recordNum이 배열의 요소 id와 같은걸 찾아서 recordId에 저장
+                const recordId = gameRecords.find(element => element.id === num);
+                if(!recordId){ // 조건에 만족하는 값이 없을 때
                     console.log("게임 기록이 없습니다.");
-                } else{
+                } else{ // 있다면 선택된 게임의 history 진행 내역을 한 줄씩 출력
                     console.log(`\n${recordId.id}번 게임 결과`);
                     recordId.history.forEach(records => console.log(records));
                     console.log("--------기록 종료-----------");
